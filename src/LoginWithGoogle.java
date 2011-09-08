@@ -26,7 +26,8 @@ public class LoginWithGoogle extends HttpServlet {
 		this.manager = new ConsumerManager();
 	}
 
-	public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+	public void doGet(HttpServletRequest req, HttpServletResponse res)
+			throws ServletException, IOException {
 		if ("true".equals(req.getParameter("is_request"))) {
 			requestOpenId(req, res);
 		} else {
@@ -34,29 +35,34 @@ public class LoginWithGoogle extends HttpServlet {
 		}
 	}
 
-	public void requestOpenId(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+	public void requestOpenId(HttpServletRequest req, HttpServletResponse res)
+			throws ServletException, IOException {
 		try {
-		    // perform discovery on the user-supplied identifier
-		    //List discoveries = manager.discover("https://www.google.com/accounts/o8/id");
-			//List discoveries = manager.discover("http://yahoo.co.jp/");
-			List discoveries = manager.discover("https://www.google.com/accounts/o8/site-xrds?hd=taka-2.info");
-	
-		    // attempt to associate with the OpenID provider
-		    // and retrieve one service endpoint for authentication
-		    DiscoveryInformation discovered = manager.associate(discoveries);
-	
-		    // store the discovery information in the user's session for later use
-		    // leave out for stateless operation / if there is no session
-		    HttpSession session = req.getSession(false);
-		    session.setAttribute("discovered", discovered);
-	
-		    // obtain a AuthRequest message to be sent to the OpenID provider
-		    AuthRequest authReq = manager.authenticate(discovered, returnURL);
-            FetchRequest fetch = FetchRequest.createFetchRequest(); 
-            fetch.addAttribute("email", "http://axschema.org/contact/email", true); 
-            authReq.addExtension(fetch);
-		    
-		    res.sendRedirect(authReq.getDestinationUrl(true));
+			// perform discovery on the user-supplied identifier
+			// List discoveries =
+			// manager.discover("https://www.google.com/accounts/o8/id");
+			// List discoveries = manager.discover("http://yahoo.co.jp/");
+			List discoveries = manager
+					.discover("https://www.google.com/accounts/o8/site-xrds?hd=taka-2.info");
+
+			// attempt to associate with the OpenID provider
+			// and retrieve one service endpoint for authentication
+			DiscoveryInformation discovered = manager.associate(discoveries);
+
+			// store the discovery information in the user's session for later
+			// use
+			// leave out for stateless operation / if there is no session
+			HttpSession session = req.getSession(false);
+			session.setAttribute("discovered", discovered);
+
+			// obtain a AuthRequest message to be sent to the OpenID provider
+			AuthRequest authReq = manager.authenticate(discovered, returnURL);
+			FetchRequest fetch = FetchRequest.createFetchRequest();
+			fetch.addAttribute("email", "http://axschema.org/contact/email",
+					true);
+			authReq.addExtension(fetch);
+
+			res.sendRedirect(authReq.getDestinationUrl(true));
 		} catch (Exception e) {
 			throw new ServletException(e);
 		}
@@ -89,23 +95,21 @@ public class LoginWithGoogle extends HttpServlet {
 			Identifier verified = verification.getVerifiedId();
 
 			if (verified != null) {
-                AuthSuccess authSuccess =
-                    (AuthSuccess) verification.getAuthResponse();
+				AuthSuccess authSuccess = (AuthSuccess) verification
+						.getAuthResponse();
 
-                System.out.println("extensions = " + authSuccess.getExtensions());
-	            if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX))
-	            {
-	                FetchResponse fetchResp = (FetchResponse) authSuccess
-	                        .getExtension(AxMessage.OPENID_NS_AX);
-	
-	                List emails = fetchResp.getAttributeValues("email");
-	                String email = (String) emails.get(0);
-	                System.out.println("email = " + email);
-	            }
-	            else
-	            {
-	            	System.out.println("has no extension");
-	            }
+				System.out.println("extensions = "
+						+ authSuccess.getExtensions());
+				if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
+					FetchResponse fetchResp = (FetchResponse) authSuccess
+							.getExtension(AxMessage.OPENID_NS_AX);
+
+					List emails = fetchResp.getAttributeValues("email");
+					String email = (String) emails.get(0);
+					System.out.println("email = " + email);
+				} else {
+					System.out.println("has no extension");
+				}
 				// success, use the verified identifier to identify the user
 				req.getRequestDispatcher("/index2.jsp").forward(req, res);
 			} else {
